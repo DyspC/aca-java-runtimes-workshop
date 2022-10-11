@@ -25,4 +25,74 @@ QUARKUS_APP="quarkus-app"
 MICRONAUT_APP="micronaut-app"
 SPRING_APP="springboot-app"
 
+### Let’s also retrieve the Log Analytics Client ID and client secret and store them in environment variables:
 
+LOG_ANALYTICS_WORKSPACE_CLIENT_ID=$(
+  az monitor log-analytics workspace show \
+    --resource-group "$RESOURCE_GROUP" \
+    --workspace-name "$LOG_ANALYTICS_WORKSPACE" \
+    --query customerId  \
+    --output tsv | tr -d '[:space:]'
+)
+echo "LOG_ANALYTICS_WORKSPACE_CLIENT_ID=$LOG_ANALYTICS_WORKSPACE_CLIENT_ID"
+
+LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET=$(
+  az monitor log-analytics workspace get-shared-keys \
+    --resource-group "$RESOURCE_GROUP" \
+    --workspace-name "$LOG_ANALYTICS_WORKSPACE" \
+    --query primarySharedKey \
+    --output tsv | tr -d '[:space:]'
+)
+echo "LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET=$LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET"
+
+
+## Get the URL of the Azure Container Registry and set it to the REGISTRY_URL variable with the following command:
+REGISTRY_URL=$(
+  az acr show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$REGISTRY" \
+    --query "loginServer" \
+    --output tsv
+)
+
+echo "REGISTRY_URL=$REGISTRY_URL"
+
+
+QUARKUS_HOST=$(
+  az containerapp show \
+    --name "$QUARKUS_APP" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.configuration.ingress.fqdn" \
+    --output tsv \
+)
+echo "QUARKUS_HOST=$QUARKUS_HOST"
+
+MICRONAUT_HOST=$(
+  az containerapp show \
+    --name "$MICRONAUT_APP" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.configuration.ingress.fqdn" \
+    --output tsv \
+)
+echo "MICRONAUT_HOST=$MICRONAUT_HOST"
+
+SPRING_HOST=$(
+  az containerapp show \
+    --name "$SPRING_APP" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.configuration.ingress.fqdn" \
+    --output tsv \
+)
+echo "SPRING_HOST=$SPRING_HOST"
+
+POSTGRES_CONNECTION_STRING=$(
+  az postgres flexible-server show-connection-string \
+    --server-name "$POSTGRES_DB" \
+    --admin-user "$POSTGRES_DB_ADMIN" \
+    --admin-password "$POSTGRES_DB_PWD" \
+    --database-name "$POSTGRES_DB_SCHEMA" \
+    --query "connectionStrings.jdbc" \
+    --output tsv
+)
+
+echo "POSTGRES_CONNECTION_STRING=$POSTGRES_CONNECTION_STRING"
